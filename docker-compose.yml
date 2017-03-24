@@ -1,0 +1,10 @@
+version: '2'
+services:
+  start:
+    build: .
+    image: merge-pdfs
+    command: npm start
+    ports:
+    - "80:80"
+    mem_limit: 1028m
+    restart: always
