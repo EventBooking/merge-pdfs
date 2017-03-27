@@ -3,8 +3,8 @@ services:
   start:
     build: .
     image: merge-pdfs
-    command: npm start
+    command: npm start -- 9052
     ports:
-    - "80:80"
+    - "9052:9052"
     mem_limit: 1028m
     restart: always

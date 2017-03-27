@@ -3,6 +3,8 @@ var express = require("express"),
     fs = require("fs"),
     uniqueFilename = require("unique-filename");
 
+var port = process.argv.length > 2 ? parseInt(process.argv[2]) : 80;
+
 var _execFile = require("child_process").execFile;
 var execFile = (path, args, callback) => {
     console.log(`Executing: ${path} ${args.join(' ')}`);
@@ -31,7 +33,7 @@ app.post('/', function (req, res) {
     });
 });
 
-var server = app.listen(80);
+var server = app.listen(port);
 
 function readFile(name) {
     return new Promise((resolve, reject) => {
