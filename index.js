@@ -67,7 +67,7 @@ function removeFile(name) {
 
 function pdftk(inputFiles, outputFile) {
     return new Promise((resolve, reject) => {
-        var args = inputFiles.slice(0).concat(["cat", "output", outputFile]);
+        var args = inputFiles.concat(["cat", "output", outputFile]);
         var command = execFile("/usr/bin/pdftk", args, (error) => {
             if (error) {
                 reject(error);
