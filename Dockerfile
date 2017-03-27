@@ -3,7 +3,7 @@ FROM node:6.10
 MAINTAINER Jordan Brown, jordan.brown@eventbooking.com
 
 RUN apt-get update
-RUN apt-get -y install default-jre
+RUN apt-get install -y pdftk
 
 WORKDIR /home
 

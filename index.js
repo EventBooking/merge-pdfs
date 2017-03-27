@@ -1,20 +1,25 @@
 var express = require("express"),
     bodyParser = require("body-parser"),
-    pdfMerge = require('easy-pdf-merge')
     fs = require("fs"),
     uniqueFilename = require("unique-filename");
 
-var _exec = require('child_process').execSync;
-var exec = cmd => {
+var _execFile = require("child_process").execFile;
+var execFile = (path, args, callback) => {
+    console.log(`Executing: ${path} ${args.join(' ')}`);
+    _execFile(path, args, callback);
+};
+
+var _execSync = require('child_process').execSync;
+var execSync = cmd => {
     console.log(`Executing: ${cmd}`);
-    _exec(cmd, {});
+    _execSync(cmd, {});
 };
 
 var app = express();
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: false }));
 app.use(bodyParser.json({ limit: "50mb" }));
 
-app.post('/', function(req, res) {
+app.post('/', function (req, res) {
     res.setTimeout(0);
 
     merge(req.body.documents).then(result => {
@@ -45,7 +50,6 @@ function writeFile(name, buffer) {
         var wstream = fs.createWriteStream(name);
 
         wstream.on('finish', () => {
-            console.log('finish writing ' + name);
             resolve(name);
         });
         wstream.on('error', error => {
@@ -58,48 +62,46 @@ function writeFile(name, buffer) {
 }
 
 function removeFile(name) {
-    exec(`rm ${name}`);
+    execSync(`rm ${name}`);
 }
 
-function decodePdf(base64) {
-    var buffer = new Buffer(base64, 'base64');
-    return buffer;
+function pdftk(inputFiles, outputFile) {
+    return new Promise((resolve, reject) => {
+        var args = inputFiles.slice(0).concat(["cat", "output", outputFile]);
+        var command = execFile("/usr/bin/pdftk", args, (error) => {
+            if (error) {
+                reject(error);
+                return;
+            }
+            resolve();
+        });
+    });
 }
 
 function merge(documents) {
-    var inputFiles = [];
-    var fileWrites = [];
+    var inputFiles = [],
+        fileWritePromises = [];
 
-    for(var doc of documents) {
-        var buffer = decodePdf(doc);
+    for (var doc of documents) {
+        var buffer = new Buffer(doc, 'base64');
         var name = uniqueFilename("/tmp") + ".pdf";
         inputFiles.push(name);
-        fileWrites.push(writeFile(name, buffer));
+        fileWritePromises.push(writeFile(name, buffer));
     }
 
     var outputFile = uniqueFilename("/tmp") + ".pdf";
     return new Promise((resolve, reject) => {
-        Promise.all(fileWrites).then(() => {
-            return new Promise((resolve, reject) => {
-                pdfMerge(inputFiles, outputFile, error => {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        readFile(outputFile).then(content => {
-                            resolve(content)
-                        }).catch(error => {
-                            reject(error);
-                        });
-                    }
-                });
-            });
+        Promise.all(fileWritePromises).then(() => {
+            return pdftk(inputFiles, outputFile);
+        }).then(() => {
+            return readFile(outputFile);
         }).then(buffer => {
             var base64 = buffer.toString('base64');
             resolve(base64);
         }).catch(error => {
             reject(error);
         }).then(() => {
-            for(var name of inputFiles.concat([outputFile]))
+            for (var name of inputFiles.concat([outputFile]))
                 removeFile(name);
         });
     });
