@@ -1,6 +1,4 @@
-var express = require("express"),
-    bodyParser = require("body-parser"),
-    fs = require("fs"),
+var fs = require("fs"),
     uniqueFilename = require("unique-filename");
 
 var port = process.argv.length > 2 ? parseInt(process.argv[2]) : 80;
@@ -16,24 +14,6 @@ var execSync = cmd => {
     console.log(`Executing: ${cmd}`);
     _execSync(cmd, {});
 };
-
-var app = express();
-app.use(bodyParser.urlencoded({ limit: "50mb", extended: false }));
-app.use(bodyParser.json({ limit: "50mb" }));
-
-app.post('/', function (req, res) {
-    res.setTimeout(0);
-
-    merge(req.body.documents).then(result => {
-        res.send({ data: result });
-    }).catch(error => {
-        console.error(error);
-        res.status(500);
-        res.send();
-    });
-});
-
-var server = app.listen(port);
 
 function readFile(name) {
     return new Promise((resolve, reject) => {
@@ -81,18 +61,19 @@ function pdftk(inputFiles, outputFile) {
 }
 
 function merge(documents) {
-    var inputFiles = [],
-        fileWritePromises = [];
-
-    for (var doc of documents) {
-        var buffer = new Buffer(doc, 'base64');
-        var name = uniqueFilename("/tmp") + ".pdf";
-        inputFiles.push(name);
-        fileWritePromises.push(writeFile(name, buffer));
-    }
-
-    var outputFile = uniqueFilename("/tmp") + ".pdf";
     return new Promise((resolve, reject) => {
+        var inputFiles = [],
+            fileWritePromises = [];
+
+        for (var doc of documents) {
+            var buffer = new Buffer(doc, 'base64');
+            var name = uniqueFilename("/tmp") + ".pdf";
+            inputFiles.push(name);
+            fileWritePromises.push(writeFile(name, buffer));
+        }
+
+        var outputFile = uniqueFilename("/tmp") + ".pdf";
+
         Promise.all(fileWritePromises).then(() => {
             return pdftk(inputFiles, outputFile);
         }).then(() => {
@@ -108,3 +89,5 @@ function merge(documents) {
         });
     });
 }
+
+exports.merge = merge;

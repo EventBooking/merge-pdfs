@@ -1,4 +1,4 @@
-FROM node:6.10
+FROM node:7.8.0
 
 MAINTAINER Jordan Brown, jordan.brown@eventbooking.com
 
@@ -9,5 +9,3 @@ WORKDIR /home
 
 ADD package.json package.json
 RUN npm install
-
-ADD index.js index.js

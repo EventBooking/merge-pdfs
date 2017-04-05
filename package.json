@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "debug": "node --debug=0.0.0.0:9232 --debug-brk ./test/test.js",
+    "test": "node ./test/test.js",
+    "postinstall": "node postinstall.js"
   },
   "author": "",
   "license": "ISC",
