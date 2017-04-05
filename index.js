@@ -44,7 +44,25 @@ function writeFile(name, buffer) {
 }
 
 function removeFile(name) {
-    execSync(`rm ${name}`);
+    return new Promise((resolve, reject) => {
+        fs.exists(name, exists => {
+            if (!exists) {
+                console.log(`${name} not found.`);
+                resolve();
+                return;
+            }
+
+            fs.unlink(name, err => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                console.log(`${name} removed.`);
+                resolve();
+            });
+        })
+    });
 }
 
 function pdftk(inputFiles, outputFile) {
