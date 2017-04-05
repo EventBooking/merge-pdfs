@@ -9,6 +9,7 @@ services:
     volumes:
     - ./test:/home/test
     - ./index.js:/home/index.js
+    - ./utils.js:/home/utils.js
     - ./package.json:/home/package.json
     mem_limit: 1028m
     restart: always
